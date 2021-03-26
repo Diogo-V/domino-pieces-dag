@@ -22,14 +22,8 @@ void Graph::addEdge(int parent, int child) {
  * @param root starting point for DFS traversal
  */
 void Graph::DFS(int node) {
-
-    // Mark the current node as visited and print it
-    this->setNodeColor(node, Color::white);
-    cout << node << " ";
- 
-    // Recur for all the vertices adjacent to this vertex
+    
     for (list<int>::iterator i = this->getAdjacentNodes(node).begin(); i != this->getAdjacentNodes(node).end(); ++i) {
-        cout << *i << endl;
         if (!(this->getNodeInfo(*i).color == Color::white))
             DFS(*i);
     }

@@ -25,10 +25,11 @@ enum class Color { white, black, grey };
  * @param finish_time int value representing the time of closing of this node
  * @param color represents the current state of the node
  */
-typedef struct {
+typedef struct node_info_struct {
     int start_time;
     int finish_time;
     Color color;
+    node_info_struct() { start_time = 0; finish_time = 0; color = Color::white; };
 } node_info_struct;
 
 
