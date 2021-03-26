@@ -10,9 +10,9 @@ random: src/randomDAG.cpp
 	$(CC) $(flags) -o build/randomDAG src/randomDAG.cpp
 	./build/randomDAG $(params) > build/problem.txt 
 
-build: random src/main.cpp
+build: random src/main.cpp src/graph.cpp
 	cat build/problem.txt
-	$(CC) $(flags) -o build/main src/main.cpp
+	$(CC) $(flags) -o build/main src/main.cpp src/graph.cpp
 
 run: build
 	time ./build/main < build/problem.txt
