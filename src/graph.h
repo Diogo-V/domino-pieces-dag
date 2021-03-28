@@ -19,18 +19,22 @@ enum class Color { white, black, grey };
 
 
 /**
- * @brief Holds DFS information about the related node.
+ * @brief Holds information about the related node.
  * 
- * @param start_time int value representing the time of discovery of this node
- * @param finish_time int value representing the time of closing of this node
  * @param color represents the current state of the node
+ * @param inDegree holds the amount of nodes connected to this node
+ * @param dp holds distance
  */
-typedef struct node_info_struct {
-    int start_time;
-    int finish_time;
+typedef struct nodeInfoStruct {
     Color color;
-    node_info_struct() { start_time = 0; finish_time = 0; color = Color::white; };
-} node_info_struct;
+    int inDegree;
+    int dist;
+    nodeInfoStruct() {
+        color = Color::white;
+        inDegree = 0;
+        dist = INT_MIN;
+    };
+} nodeInfoStruct;
 
 
 /**
@@ -43,22 +47,34 @@ class Graph {
         /**
          * @brief Holds all the info related to the key node after DFS traversal.
          */
-        map<int, node_info_struct> _nodeInfo;
+        unordered_map<int, nodeInfoStruct> _nodeInfo;
 
         /**
          * @brief Holds all the nodes which this node leads to.
          */
-        map<int, list<int>> _adjacent;
+        unordered_map<int, list<int>> _adjacent;
+
+        /**
+         * @brief Holds number of vertices inside this graph.
+         */
+        int _numberOfNodes;
     
     public:
+
+        /**
+         * @brief Graph constructor.
+         *
+         * @param nodes number of nodes inside graph
+         */
+        explicit Graph(int nodes);
 
         /**
          * @brief Get the Node Info object.
          * 
          * @param node node value
-         * @return node_info_struct related to this node
+         * @return nodeInfoStruct related to this node
          */
-        node_info_struct getNodeInfo(int node);
+        nodeInfoStruct getNodeInfo(int node);
 
         /**
          * @brief Get the Adjacent Nodes object.
@@ -67,22 +83,13 @@ class Graph {
          * @return list<int> representing a list of connected nodes
          */
         list<int> getAdjacentNodes(int node);
-        
-        /**
-         * @brief Changes node's starting time.
-         * 
-         * @param node node to be changed
-         * @param start_time new value
-         */
-        void setNodeStartTime(int node, int start_time);
 
         /**
-         * @brief Changes node's closing time.
-         * 
-         * @param node node to be changed
-         * @param finish_time new value
+         * @brief Get the Number of Nodes object.
+         *
+         * @return number of nodes
          */
-        void setNodeFinishTime(int node, int finish_time);
+        int getNumberOfNodes() const;
 
         /**
          * @brief Changes node's current color.
@@ -93,6 +100,21 @@ class Graph {
         void setNodeColor(int node, Color color);
 
         /**
+         * @brief Increments node's total in degree value.
+         *
+         * @param node node to be changed
+         */
+        void incrementNodeInDegree(int node);
+
+        /**
+         * @brief Changes node's distance.
+         *
+         * @param node node to be changed
+         * @param dp new distance
+         */
+        void setNodeDP(int node, int dp);
+
+        /**
          * @brief Inserts a new edge from parent to child node.
          * 
          * @param parent parent's node
@@ -101,11 +123,19 @@ class Graph {
         void addEdge(int parent, int child);
     
         /**
-         * @brief Performs a DFS traversal of this graph starting from root node.
-         * 
-         * @param root starting point for DFS traversal
+         * @brief Performs a DFS traversal of this graph starting from first node.
+         *
+         * @return stack with nodes in topological order
          */
-        void DFS(int root);
+        stack<int> DFS();
+
+        /**
+         * @brief Auxiliary function for DFS. Performs DFS from this node onward.
+         *
+         * @param parent root for DFS
+         * @param topological list with nodes in topological order
+         */
+        void DFS_visit(int parent, stack<int>* topological);
 
 };
 

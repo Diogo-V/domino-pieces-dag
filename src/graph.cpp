@@ -6,27 +6,19 @@ using namespace std;
 
 
 /**
- * @brief Inserts a new edge from parent to child node.
- * 
- * @param parent parent's node
- * @param child child's node
+ * @brief Graph constructor.
+ *
+ * @param nodes number of nodes inside graph
  */
-void Graph::addEdge(int parent, int child) {
-    _adjacent[parent].push_back(child); // Add w to node’s list.
-}
+Graph::Graph(int nodes) {
 
+    /* Populates info vector with all the possible nodes */
+    nodeInfoStruct info;
+    for (int i = 1; i <= nodes; i++)
+        this->_nodeInfo.insert(make_pair(i, info));
 
-/**
- * @brief Performs a DFS traversal of this graph starting from root node.
- * 
- * @param root starting point for DFS traversal
- */
-void Graph::DFS(int node) {
-    
-    for (list<int>::iterator i = this->getAdjacentNodes(node).begin(); i != this->getAdjacentNodes(node).end(); ++i) {
-        if (!(this->getNodeInfo(*i).color == Color::white))
-            DFS(*i);
-    }
+    /* Saves number of nodes */
+    this->_numberOfNodes = nodes;
 
 }
 
@@ -35,11 +27,9 @@ void Graph::DFS(int node) {
  * @brief Get the Node Info object.
  * 
  * @param node node value
- * @return node_info_struct related to this node
+ * @return nodeInfoStruct related to this node
  */
-node_info_struct Graph::getNodeInfo(int node) { 
-    return this->_nodeInfo[node]; 
-}
+nodeInfoStruct Graph::getNodeInfo(int node) { return this->_nodeInfo[node]; }
 
 
 /**
@@ -48,31 +38,15 @@ node_info_struct Graph::getNodeInfo(int node) {
  * @param node node value
  * @return list<int> representing a list of connected nodes
  */
-list<int> Graph::getAdjacentNodes(int node) { 
-    return this->_adjacent[node];
-}
+list<int> Graph::getAdjacentNodes(int node) { return this->_adjacent[node]; }
 
 
 /**
- * @brief Changes node's starting time.
- * 
- * @param node node to be changed
- * @param start_time new value
+ * @brief Get the Number of Nodes object.
+ *
+ * @return number of nodes
  */
-void Graph::setNodeStartTime(int node, int start_time) {
-    this->_nodeInfo[node].start_time = start_time;
-}
-
-
-/**
- * @brief Changes node's closing time.
- * 
- * @param node node to be changed
- * @param finish_time new value
- */
-void Graph::setNodeFinishTime(int node, int finish_time) {
-    this->_nodeInfo[node].finish_time = finish_time;
-}
+int Graph::getNumberOfNodes() const { return this->_numberOfNodes; }
 
 
 /**
@@ -81,6 +55,84 @@ void Graph::setNodeFinishTime(int node, int finish_time) {
  * @param node node to be changed
  * @param color new color
  */
-void Graph::setNodeColor(int node, Color color) {
-    this->_nodeInfo[node].color = color;
+void Graph::setNodeColor(int node, Color color) { this->_nodeInfo[node].color = color; }
+
+
+/**
+ * @brief Increments node's total in degree value.
+ *
+ * @param node node to be changed
+ */
+void Graph::incrementNodeInDegree(int node) { this->_nodeInfo[node].inDegree++; }
+
+
+/**
+ * @brief Changes node's distance.
+ *
+ * @param node node to be changed
+ * @param dp new distance
+ */
+void Graph::setNodeDP(int node, int dp) { this->_nodeInfo[node].dist = dp; }
+
+
+/**
+ * @brief Inserts a new edge from parent to child node.
+ *
+ * @param parent parent's node
+ * @param child child's node
+ */
+void Graph::addEdge(int parent, int child) {
+
+    /* Creates a connection between two nodes */
+    this->_adjacent[parent].push_back(child);
+
+    /* Increments child's in degrees */
+    this->incrementNodeInDegree(child);
+
+}
+
+
+/**
+ * @brief Performs a DFS traversal of this graph starting from first node.
+ *
+ * @return list with nodes in topological order
+ */
+stack<int> Graph::DFS() {
+
+    /* Holds an list of inversely sorted nodes by their finish time */
+    stack<int> topological;
+
+    /* Cycles through each node and performs a DFS on it */
+    for (int parent = 1; parent <= this->getNumberOfNodes(); parent++)
+        if (this->getNodeInfo(parent).color == Color::white)
+            this->DFS_visit(parent, &topological);
+
+    return topological;
+
+}
+
+
+/**
+ * @brief Auxiliary function for DFS. Performs DFS from this node onward.
+ *
+ * @param parent root for DFS
+ * @param topological stack with nodes in topological order
+ */
+void Graph::DFS_visit(int parent, stack<int>* topological) {
+
+    /* Fail safe */
+    assert(this->getNodeInfo(parent).color == Color::white);
+
+    /* Since we have visited this node, we mark it as grey and save time of discovery */
+    this->setNodeColor(parent, Color::grey);
+
+    /* Cycles through all parent's edges and performs DFS_visit on all of them */
+    for (int child : this->getAdjacentNodes(parent))
+        if (this->getNodeInfo(child).color == Color::white)
+            this->DFS_visit(child, topological);
+
+    /* Since we have finished visiting this node, we mark it as black and save time of ending */
+    this->setNodeColor(parent, Color::black);
+    topological->push(parent);
+
 }
