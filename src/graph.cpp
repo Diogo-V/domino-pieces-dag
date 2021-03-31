@@ -1,4 +1,3 @@
-#include <iostream>
 #include "graph.h"
 
 
@@ -14,8 +13,10 @@ Graph::Graph(int nodes) {
 
     /* Populates info vector with all the possible nodes */
     nodeInfoStruct info;
-    for (int i = 1; i <= nodes; i++)
-        this->_nodeInfo.insert(make_pair(i, info));
+    this->_nodeInfo.resize(nodes, info);
+
+    /* Creates and allocates space for all the nodes' connections */
+    this->_adjacent.resize(nodes);
 
     /* Saves number of nodes */
     this->_numberOfNodes = nodes;
@@ -29,7 +30,7 @@ Graph::Graph(int nodes) {
  * @param node node value
  * @return nodeInfoStruct related to this node
  */
-nodeInfoStruct Graph::getNodeInfo(int node) { return this->_nodeInfo[node]; }
+nodeInfoStruct Graph::getNodeInfo(int node) { return this->_nodeInfo[node-1]; }
 
 
 /**
@@ -38,7 +39,7 @@ nodeInfoStruct Graph::getNodeInfo(int node) { return this->_nodeInfo[node]; }
  * @param node node value
  * @return list<int> representing a list of connected nodes
  */
-list<int> Graph::getAdjacentNodes(int node) { return this->_adjacent[node]; }
+list<int> Graph::getAdjacentNodes(int node) { return this->_adjacent[node-1]; }
 
 
 /**
@@ -55,7 +56,7 @@ int Graph::getNumberOfNodes() const { return this->_numberOfNodes; }
  * @param node node to be changed
  * @param color new color
  */
-void Graph::setNodeColor(int node, Color color) { this->_nodeInfo[node].color = color; }
+void Graph::setNodeColor(int node, Color color) { this->_nodeInfo[node-1].color = color; }
 
 
 /**
@@ -63,16 +64,16 @@ void Graph::setNodeColor(int node, Color color) { this->_nodeInfo[node].color = 
  *
  * @param node node to be changed
  */
-void Graph::incrementNodeInDegree(int node) { this->_nodeInfo[node].inDegree++; }
+void Graph::incrementNodeInDegree(int node) { this->_nodeInfo[node-1].inDegree++; }
 
 
 /**
  * @brief Changes node's distance.
  *
  * @param node node to be changed
- * @param dp new distance
+ * @param dist new distance
  */
-void Graph::setNodeDP(int node, int dp) { this->_nodeInfo[node].dist = dp; }
+void Graph::setNodeDistance(int node, int dist) { this->_nodeInfo[node-1].dist = dist; }
 
 
 /**
@@ -84,7 +85,7 @@ void Graph::setNodeDP(int node, int dp) { this->_nodeInfo[node].dist = dp; }
 void Graph::addEdge(int parent, int child) {
 
     /* Creates a connection between two nodes */
-    this->_adjacent[parent].push_back(child);
+    this->_adjacent[parent-1].push_back(child);
 
     /* Increments child's in degrees */
     this->incrementNodeInDegree(child);
@@ -93,46 +94,54 @@ void Graph::addEdge(int parent, int child) {
 
 
 /**
- * @brief Performs a DFS traversal of this graph starting from first node.
+ * @brief Performs an iterative DFS traversal of this graph starting from first node (1).
  *
  * @return list with nodes in topological order
  */
-stack<int> Graph::DFS() {
+deque<int> Graph::dfs() {
 
-    /* Holds an list of inversely sorted nodes by their finish time */
-    stack<int> topological;
+    /* Holds nodes that we are visiting or are about to visit */
+    deque<int> dfsAux;
 
-    /* Cycles through each node and performs a DFS on it */
-    for (int parent = 1; parent <= this->getNumberOfNodes(); parent++)
+    /* Holds nodes that have been already visited in topological order */
+    deque<int> topological;
+
+    /* Visits each node (domino piece) in our graph */
+    for (int parent = 1; parent <= this->getNumberOfNodes(); parent++) {
+
+        /* If it has not been yet visited, we put it inside our dfs aux */
         if (this->getNodeInfo(parent).color == Color::white)
-            this->DFS_visit(parent, &topological);
+            dfsAux.push_front(parent);
+
+        /* We keep visiting node until all the nodes have turned black (fully visited) */
+        while (!dfsAux.empty()) {
+
+            /* Gets last node being put inside our auxiliary. It mimics what a recursion
+             * would have done */
+            int node = dfsAux.front();
+
+            /* If we have already visited everything from this node, we put it in our topological
+             * stack and go to next iteration */
+            if (this->getNodeInfo(node).color == Color::black) {
+                dfsAux.pop_front();
+                topological.push_front(node);
+                continue;
+            }
+
+            /* Since we are about to visit each child from this node, we set it as grey */
+            this->setNodeColor(node, Color::grey);
+
+            /* Puts every not yet visited child node inside aux */
+            for (auto son : this->getAdjacentNodes(node))
+                if(this->getNodeInfo(son).color == Color::white)
+                    dfsAux.push_front(son);
+
+            /* Since we have put all it's children inside the aux, it has finished */
+            this->setNodeColor(node, Color::black);
+
+        }
+
+    }
 
     return topological;
-
-}
-
-
-/**
- * @brief Auxiliary function for DFS. Performs DFS from this node onward.
- *
- * @param parent root for DFS
- * @param topological stack with nodes in topological order
- */
-void Graph::DFS_visit(int parent, stack<int>* topological) {
-
-    /* Fail safe */
-    assert(this->getNodeInfo(parent).color == Color::white);
-
-    /* Since we have visited this node, we mark it as grey and save time of discovery */
-    this->setNodeColor(parent, Color::grey);
-
-    /* Cycles through all parent's edges and performs DFS_visit on all of them */
-    for (int child : this->getAdjacentNodes(parent))
-        if (this->getNodeInfo(child).color == Color::white)
-            this->DFS_visit(child, topological);
-
-    /* Since we have finished visiting this node, we mark it as black and save time of ending */
-    this->setNodeColor(parent, Color::black);
-    topological->push(parent);
-
 }

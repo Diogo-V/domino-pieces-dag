@@ -7,45 +7,31 @@ using namespace std;
 
 
 /**
- * @brief Inits a graph with all the required space to insert nodes. After init, is still empty.
+ * @brief Creates and populates the graph that is going to represent all the pieces' placement.
  *
  * @return newly created graph
  */
 Graph initGraph() {
 
     /* Receive number of nodes and vertices from cin */
-    int n_nodes, n_edges;
+    int nNodes, nEdges;
 
-    /* Used in loops to gather line */
-    string line;
-
-    /* Gets first line from file which holds graph inputs */
-    std::getline(cin, line);
-    sscanf(line.c_str(), "%d %d", &n_nodes, &n_edges);
-
-    /* Creates graph */
-    Graph graph(n_nodes);
-
-    return graph;
-
-}
-
-
-/**
- * @brief Populates graph with all the nodes + edges from cin.
- *
- * @param graph Graph to be populated
- */
-void populatesGraph(Graph *graph) {
-
-    /* Hold parent and child node numbers */
+    /* Hold parent and child node numbers while populating */
     int parent, child;
 
-    /* Populates graph */
-    for(string line; getline(cin, line); ) {
-        sscanf(line.c_str(), "%d %d", &parent, &child);
-        (*graph).addEdge(parent, child);
+    /* Reads number of nodes and edges from cin */
+    cin >> nNodes >> nEdges;
+
+    /* Creates graph */
+    Graph graph(nNodes);
+
+    /* Populates graph with all the edges from cin */
+    for (int i = 0; i < nEdges; i++) {
+        cin >> parent >> child;
+        graph.addEdge(parent, child);
     }
+
+    return graph;
 
 }
 
@@ -57,7 +43,7 @@ void populatesGraph(Graph *graph) {
  * @param graph graph representing domino problem which will be traversed
  * @param topological stack with nodes in topological order
  */
-void solveDominoPiecesProblem(Graph* graph, stack<int>* topological) {
+void solveDominoPiecesProblem(Graph* graph, deque<int>* topological) {
 
     /* Hold the amount of times we have to make a piece fall to traverse all the pieces */
     int interventions = 0, sequence = 0;
@@ -67,7 +53,7 @@ void solveDominoPiecesProblem(Graph* graph, stack<int>* topological) {
     for (int node = 1; node <= graph->getNumberOfNodes(); node++) {
         if (graph->getNodeInfo(node).inDegree == 0) {
             interventions++;
-            graph->setNodeDP(node, 1);
+            graph->setNodeDistance(node, 1);
         }
     }
 
@@ -77,10 +63,10 @@ void solveDominoPiecesProblem(Graph* graph, stack<int>* topological) {
     while ( ! topological->empty()) {
 
         /* Gets node from stack */
-        int node = topological->top(); topological->pop();
+        int node = topological->front(); topological->pop_front();
 
         /* Traverses children sets their distance */
-        if (graph->getNodeInfo(node).dist != INT_MIN) {
+        if (graph->getNodeInfo(node).dist != NEGATIVE_INFINITY) {
 
             int parentDist = graph->getNodeInfo(node).dist;
 
@@ -88,9 +74,11 @@ void solveDominoPiecesProblem(Graph* graph, stack<int>* topological) {
 
                 if (graph->getNodeInfo(child).dist < parentDist + 1) {
 
-                    graph->setNodeDP(child, parentDist + 1);
-                    if (parentDist + 1 > sequence)  /* Finds and holds longest distance */
-                        sequence = parentDist + 1;
+                    graph->setNodeDistance(child, parentDist + 1);
+
+                    /* Finds and holds longest distance. Is done here as to avoid doing another loop
+                     * to find the highest distance */
+                    if (parentDist + 1 > sequence) sequence = parentDist + 1;
 
                 }
 
@@ -113,14 +101,11 @@ void solveDominoPiecesProblem(Graph* graph, stack<int>* topological) {
  */
 int main() {
 
-    /* Creates the graph which is going to represent all the domino pieces' placement */
+    /* Creates and populates the graph that is going to represent all the pieces' placement */
     Graph graph = initGraph();
 
-    /* Populates graph with all the nodes and edges from stdin */
-    populatesGraph(&graph);
-
     /* Performs a DFS and returns an array with all the vertices inversely sorted by finish time */
-    stack<int> topological = graph.DFS();
+    deque<int> topological = graph.dfs();
 
     /* Finds minimum interventions and biggest sequence. Prints them on the screen */
     solveDominoPiecesProblem(&graph, &topological);

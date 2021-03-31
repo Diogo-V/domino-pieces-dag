@@ -3,6 +3,7 @@
 
 #include <bits/stdc++.h>
 #include <string>
+#define NEGATIVE_INFINITY INT_MIN
 
 
 using namespace std;
@@ -32,7 +33,7 @@ typedef struct nodeInfoStruct {
     nodeInfoStruct() {
         color = Color::white;
         inDegree = 0;
-        dist = INT_MIN;
+        dist = NEGATIVE_INFINITY;
     };
 } nodeInfoStruct;
 
@@ -47,12 +48,12 @@ class Graph {
         /**
          * @brief Holds all the info related to the key node after DFS traversal.
          */
-        unordered_map<int, nodeInfoStruct> _nodeInfo;
+        vector<nodeInfoStruct> _nodeInfo;
 
         /**
          * @brief Holds all the nodes which this node leads to.
          */
-        unordered_map<int, list<int>> _adjacent;
+        vector<list<int>> _adjacent;
 
         /**
          * @brief Holds number of vertices inside this graph.
@@ -110,9 +111,9 @@ class Graph {
          * @brief Changes node's distance.
          *
          * @param node node to be changed
-         * @param dp new distance
+         * @param dist new distance
          */
-        void setNodeDP(int node, int dp);
+        void setNodeDistance(int node, int dist);
 
         /**
          * @brief Inserts a new edge from parent to child node.
@@ -121,21 +122,13 @@ class Graph {
          * @param child child's node
          */
         void addEdge(int parent, int child);
-    
-        /**
-         * @brief Performs a DFS traversal of this graph starting from first node.
-         *
-         * @return stack with nodes in topological order
-         */
-        stack<int> DFS();
 
         /**
-         * @brief Auxiliary function for DFS. Performs DFS from this node onward.
+         * @brief Performs an iterative DFS traversal of this graph starting from first node (1).
          *
-         * @param parent root for DFS
-         * @param topological list with nodes in topological order
+         * @return deque with nodes in topological order
          */
-        void DFS_visit(int parent, stack<int>* topological);
+        deque<int> dfs();
 
 };
 
